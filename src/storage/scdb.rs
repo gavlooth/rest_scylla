@@ -6,7 +6,6 @@ use uuid::Uuid;
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 pub async fn create_session(uri: &str) -> Result<Session>{
-
     SessionBuilder::new()
         .known_node(uri)
         .build()

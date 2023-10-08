@@ -1,11 +1,15 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result, middleware::Logger};
 use serde::{Serialize};
 use scylla::{Session, SessionBuilder, IntoTypedRows};
-
+use std::sync::Mutex;
 mod storage;
 
 use crate::storage::scdb::{create_session,initialize_scylladb};
 
+#[derive(Clone)]
+struct AppState<'a> {
+db : &'a Session
+}
 
 #[derive(Serialize)]
 pub struct Response {
@@ -22,7 +26,9 @@ async fn healthcheck( ) -> impl Responder{
 }
 
 #[post("/api/initialize_store")]
-async fn init_store_handler(session: &Session) -> impl Responder{
+async fn init_store_handler(state: web::Data< AppState <'a>) -> impl Responder{
+
+    let conn = state.db;
     let response = Response {
      message: "Health check OK".to_string()
     };
@@ -44,11 +50,16 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug") ;
     std::env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
+    let db_string = std::env::var("SCYLLA_URI").unwrap_or_else(|_| "127.0.0.1:9042".to_string());
+
+    let state = AppState{db: & create_session(&db_string).await.unwrap()};
+
 
     HttpServer::new(move || {
         let logger = Logger::default();
         App::new()
             .wrap(logger)
+            // .app_data(state.clone())
             .service(healthcheck)
             .default_service(web::route().to(not_found))
     })
