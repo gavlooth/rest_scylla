@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 mod storage;
 
-use crate::storage::scdb::{initialize_scylladb, create_session};
+use crate::storage::scdb::{initialize_scylladb, create_session, create_scylladb};
 
 #[derive(Clone)]
 struct AppState{
@@ -29,7 +29,9 @@ async fn healthcheck( ) -> impl Responder{
 #[post("/api/initialize_store")]
 async fn init_store_handler(state:  web::Data<AppState>) -> impl  Responder{
     let conn = & state.db;
-    initialize_scylladb(conn).await.unwrap() ;
+
+    create_scylladb(conn).await.unwrap();
+    initialize_scylladb(conn).await.unwrap();
     let response = Response {
      message: "db initialized".to_string()
     };
@@ -55,7 +57,7 @@ async fn main() -> std::io::Result<()> {
     match  create_session(&db_string).await {
         Ok(v) =>
         {
-            let state =  AppState{db : v.into()} ;
+            let state = web::Data::new( AppState{db : v.into()} );
             HttpServer::new(move || {
                 let logger = Logger::default();
                 App::new()

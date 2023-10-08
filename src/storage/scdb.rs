@@ -6,6 +6,7 @@ use scylla::{Session, SessionBuilder};
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 pub async fn create_session(uri: &str) -> Result<Session>{
+    print!("{}",uri);
     SessionBuilder::new()
         .known_node(uri)
         .build()
@@ -32,7 +33,7 @@ static CREATE_USERS_TABLE_QUERY: &str = r#"
     password_hash blob,
     role text,
     time timestamp,
-    PRIMARY KEY(user_id, )
+    PRIMARY KEY(user_id)
   );
 "#;
 
@@ -47,6 +48,7 @@ pub async fn create_scylladb(session: &Session) -> Result<()> {
 
 
 pub async fn initialize_scylladb(session: &Session) -> Result<()> {
+    print!("{}",CREATE_USERS_TABLE_QUERY);
     session
         .query(CREATE_USERS_TABLE_QUERY, ())
         .await
