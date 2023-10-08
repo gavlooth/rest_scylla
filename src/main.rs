@@ -1,8 +1,9 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result, middleware::Logger};
+use actix_web::{get, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result, middleware::Logger};
 use serde::{Serialize};
 use scylla::{Session};
 use std::sync::Arc;
-
+use actix_files::{NamedFile, Files};
+use std::path::PathBuf;
 mod storage;
 
 use crate::storage::scdb::{initialize_scylladb, create_session, create_scylladb};
@@ -17,6 +18,7 @@ pub struct Response {
     pub message: String
 
 }
+
 #[get("/health")]
 async fn healthcheck( ) -> impl Responder{
     let response = Response {
@@ -38,6 +40,13 @@ async fn init_store_handler(state:  web::Data<AppState>) -> impl  Responder{
     HttpResponse::Ok().json(response)
 
 }
+
+// #[get("/")]
+// async fn index(_req: HttpRequest) -> Result<NamedFile> {
+//     let path: PathBuf = "./static/index.html".parse().unwrap();
+//     Ok(NamedFile::open(path)?)
+// }
+//
 
 async fn not_found(  ) -> Result<HttpResponse>
 {
@@ -65,6 +74,7 @@ async fn main() -> std::io::Result<()> {
                     .app_data(state.clone())
                     .service(healthcheck)
                     .service(init_store_handler)
+                    .service(Files::new("/", "./static").show_files_listing())
                     .default_service(web::route().to(not_found))
             })
             .bind(("127.0.0.1", 9090))?
@@ -78,3 +88,9 @@ async fn main() -> std::io::Result<()> {
     }
 
 }
+
+// use actix_files::fs;
+// App::new()
+//        .route("/", web::get().to(index))
+//        .route("/again", web::get().to(index2))
+//       .service(fs::Files::new("/app", "./main_page").show_files_listing())
