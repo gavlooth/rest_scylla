@@ -26,9 +26,9 @@ async fn healthcheck( ) -> impl Responder{
 }
 
 #[post("/api/initialize_store")]
-async fn init_store_handler(state: web::Data< AppState <'a>) -> impl Responder{
-
+async fn init_store_handler(state:  web::Data< AppState <'_ > >) -> impl  Responder{
     let conn = state.db;
+    initialize_scylladb(conn).await ;
     let response = Response {
      message: "Health check OK".to_string()
     };
@@ -52,7 +52,7 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
     let db_string = std::env::var("SCYLLA_URI").unwrap_or_else(|_| "127.0.0.1:9042".to_string());
 
-    let state = AppState{db: & create_session(&db_string).await.unwrap()};
+    // let state = AppState{db: & create_session(&db_string).await.unwrap()};
 
 
     HttpServer::new(move || {
