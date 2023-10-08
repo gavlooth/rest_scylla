@@ -1,6 +1,6 @@
-use scylla::{Session, SessionBuilder, IntoTypedRows};
-use std::error::Error;
-use uuid::Uuid;
+use scylla::{Session, SessionBuilder};
+
+
 
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
